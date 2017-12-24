@@ -11,7 +11,8 @@ public class Main {
 
         ServerType serverType;
         // This server PORT
-        int serverPort = 28900;
+        int serverId = Integer.parseInt(args[0]);
+        int serverPort = Integer.parseInt(args[1]);
 
         serverType = ServerType.PRIMARY;
         // If this is primary server then start listening for other server connections
