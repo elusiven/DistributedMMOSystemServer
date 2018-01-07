@@ -138,16 +138,25 @@ final class TransferPlayerCommand extends Table {
 
   public PlayerInfo player() { return player(new PlayerInfo()); }
   public PlayerInfo player(PlayerInfo obj) { int o = __offset(4); return o != 0 ? obj.__assign(__indirect(o + bb_pos), bb) : null; }
+  public String serverip() { int o = __offset(6); return o != 0 ? __string(o + bb_pos) : null; }
+  public ByteBuffer serveripAsByteBuffer() { return __vector_as_bytebuffer(6, 1); }
+  public int serverPort() { int o = __offset(8); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
 
   public static int createTransferPlayerCommand(FlatBufferBuilder builder,
-      int playerOffset) {
-    builder.startObject(1);
+      int playerOffset,
+      int serveripOffset,
+      int serverPort) {
+    builder.startObject(3);
+    TransferPlayerCommand.addServerPort(builder, serverPort);
+    TransferPlayerCommand.addServerip(builder, serveripOffset);
     TransferPlayerCommand.addPlayer(builder, playerOffset);
     return TransferPlayerCommand.endTransferPlayerCommand(builder);
   }
 
-  public static void startTransferPlayerCommand(FlatBufferBuilder builder) { builder.startObject(1); }
+  public static void startTransferPlayerCommand(FlatBufferBuilder builder) { builder.startObject(3); }
   public static void addPlayer(FlatBufferBuilder builder, int playerOffset) { builder.addOffset(0, playerOffset, 0); }
+  public static void addServerip(FlatBufferBuilder builder, int serveripOffset) { builder.addOffset(1, serveripOffset, 0); }
+  public static void addServerPort(FlatBufferBuilder builder, int serverPort) { builder.addInt(2, serverPort, 0); }
   public static int endTransferPlayerCommand(FlatBufferBuilder builder) {
     int o = builder.endObject();
     return o;
@@ -162,18 +171,20 @@ final class PlayerInfo extends Table {
 
   public String id() { int o = __offset(4); return o != 0 ? __string(o + bb_pos) : null; }
   public ByteBuffer idAsByteBuffer() { return __vector_as_bytebuffer(4, 1); }
-  public String name() { int o = __offset(6); return o != 0 ? __string(o + bb_pos) : null; }
-  public ByteBuffer nameAsByteBuffer() { return __vector_as_bytebuffer(6, 1); }
+  public int serverId() { int o = __offset(6); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
+  public String name() { int o = __offset(8); return o != 0 ? __string(o + bb_pos) : null; }
+  public ByteBuffer nameAsByteBuffer() { return __vector_as_bytebuffer(8, 1); }
   public Vec3 pos() { return pos(new Vec3()); }
-  public Vec3 pos(Vec3 obj) { int o = __offset(8); return o != 0 ? obj.__assign(o + bb_pos, bb) : null; }
+  public Vec3 pos(Vec3 obj) { int o = __offset(10); return o != 0 ? obj.__assign(o + bb_pos, bb) : null; }
   public Qua rot() { return rot(new Qua()); }
-  public Qua rot(Qua obj) { int o = __offset(10); return o != 0 ? obj.__assign(o + bb_pos, bb) : null; }
+  public Qua rot(Qua obj) { int o = __offset(12); return o != 0 ? obj.__assign(o + bb_pos, bb) : null; }
 
-  public static void startPlayerInfo(FlatBufferBuilder builder) { builder.startObject(4); }
+  public static void startPlayerInfo(FlatBufferBuilder builder) { builder.startObject(5); }
   public static void addId(FlatBufferBuilder builder, int idOffset) { builder.addOffset(0, idOffset, 0); }
-  public static void addName(FlatBufferBuilder builder, int nameOffset) { builder.addOffset(1, nameOffset, 0); }
-  public static void addPos(FlatBufferBuilder builder, int posOffset) { builder.addStruct(2, posOffset, 0); }
-  public static void addRot(FlatBufferBuilder builder, int rotOffset) { builder.addStruct(3, rotOffset, 0); }
+  public static void addServerId(FlatBufferBuilder builder, int serverId) { builder.addInt(1, serverId, 0); }
+  public static void addName(FlatBufferBuilder builder, int nameOffset) { builder.addOffset(2, nameOffset, 0); }
+  public static void addPos(FlatBufferBuilder builder, int posOffset) { builder.addStruct(3, posOffset, 0); }
+  public static void addRot(FlatBufferBuilder builder, int rotOffset) { builder.addStruct(4, rotOffset, 0); }
   public static int endPlayerInfo(FlatBufferBuilder builder) {
     int o = builder.endObject();
     return o;

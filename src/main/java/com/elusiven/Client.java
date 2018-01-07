@@ -23,6 +23,7 @@ public class Client {
 
     private String id = UUID.randomUUID().toString();
     private Vec3 position;
+    private int serverOwnerId;
 
     private List<Client> AreaOfInterest = new ArrayList<>();
 
@@ -33,7 +34,17 @@ public class Client {
         outputStream = client.getOutputStream();
         new ReadThread().start();
         position = new Vec3();
-        sendSpawnEvent(id, 30, 0.50f, 10);
+        if(Main.ServerID == 1){
+            sendSpawnEvent(id, 30, 0.50f, 10);
+        }
+    }
+
+    public int getServerOwnerId(){
+        return serverOwnerId;
+    }
+
+    public void setServerOwnerId(int serverOwnerId){
+        this.serverOwnerId = serverOwnerId;
     }
 
     public void setPosition(Vec3 pos){
@@ -83,7 +94,7 @@ public class Client {
 
         FlatBufferBuilder fbb = new FlatBufferBuilder(1024);
 
-        int playerInfoOffset = FlatCreator.create_PlayerInfo(fbb, id, x, y, z, 0, 0, 0, 0);
+        int playerInfoOffset = FlatCreator.create_PlayerInfo(fbb, id, Main.ServerID,x, y, z, 0, 0, 0, 0);
 
         InitialConnectCommand.startInitialConnectCommand(fbb);
         InitialConnectCommand.addPlayer(fbb, playerInfoOffset);
@@ -103,7 +114,7 @@ public class Client {
 
         FlatBufferBuilder fbb = new FlatBufferBuilder(1024);
 
-        int playerInfoOffset = FlatCreator.create_PlayerInfo(fbb, id, x, y, z, 0, 0, 0, 0);
+        int playerInfoOffset = FlatCreator.create_PlayerInfo(fbb, id, Main.ServerID,x, y, z, 0, 0, 0, 0);
 
         MeetCommand.startMeetCommand(fbb);
         MeetCommand.addOtherPlayer(fbb, playerInfoOffset);
@@ -119,8 +130,35 @@ public class Client {
         sendToClient(buff);
     }
 
+    public void sendTransferPlayerEvent(String serverIp, int serverPort, String id, float x, float y, float z){
+
+        FlatBufferBuilder fbb = new FlatBufferBuilder(1024);
+
+        int playerInfoOffset = FlatCreator.create_PlayerInfo(fbb, id, Main.ServerID,x, y, z, 0, 0, 0, 0);
+        int serverIpOffset = fbb.createString(serverIp);
+
+        TransferPlayerCommand.startTransferPlayerCommand(fbb);
+        TransferPlayerCommand.addPlayer(fbb, playerInfoOffset);
+        TransferPlayerCommand.addServerip(fbb, serverIpOffset);
+        TransferPlayerCommand.addServerPort(fbb, serverPort);
+        int transferPlayerCommandOffset = TransferPlayerCommand.endTransferPlayerCommand(fbb);
+
+        MessageRoot.startMessageRoot(fbb);
+        MessageRoot.addDataType(fbb, Data.TransferPlayerCommand);
+        MessageRoot.addData(fbb, transferPlayerCommandOffset);
+        int msgRootOffset = MessageRoot.endMessageRoot(fbb);
+        MessageRoot.finishMessageRootBuffer(fbb, msgRootOffset);
+
+        byte[] buffer = fbb.sizedByteArray();
+        sendToClient(buffer);
+    }
+
     public String getId(){
         return id;
+    }
+
+    public void setId(String id){
+        this.id = id;
     }
 
     // Send data to client
@@ -134,6 +172,17 @@ public class Client {
 
         } catch (IOException e){
             e.printStackTrace();
+            try {
+                inputStream.close();
+                outputStream.close();
+                client.close();
+                listener.removeClient(Client.this);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                System.out.println("Client possibly disconnected");
+            }
+
+            System.out.println("sendToClient Excepction");
         }
     }
 
@@ -166,8 +215,10 @@ public class Client {
                 client.close();
                 System.out.println("Client ID: " + id + "   -> Disconnected");
                 listener.removeClient(Client.this);
+                this.interrupt();
             } catch (IOException e) {
                 e.printStackTrace();
+
             }
 
         }

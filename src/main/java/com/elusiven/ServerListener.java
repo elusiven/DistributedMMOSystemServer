@@ -12,13 +12,11 @@ import java.net.Socket;
 public class ServerListener extends Thread {
 
     public ServerStarter serverStarter;
-    public NearbyServers nearbyServers;
 
     public ServerListener(int port) throws IOException {
 
         // Create a serverStarter socket to listen for other serverStarter connections
         serverStarter = new ServerStarter(port);
-        nearbyServers = new NearbyServers();
     }
 
     @Override
@@ -28,9 +26,9 @@ public class ServerListener extends Thread {
             try {
                 socketServer = serverStarter.accept();
                 // nearby serverStarter connected - create and add to list
-                Server server = new Server(socketServer, nearbyServers);
-                nearbyServers.addServer(server);
-                System.out.println("ServerStarter " + "-- "  + socketServer.getRemoteSocketAddress() + " --" + " connected.");
+                Server server = new Server(socketServer, Main.nearbyServers);
+                Main.nearbyServers.addServer(server);
+                System.out.println("ServerListener " + "-- "  + socketServer.getRemoteSocketAddress() + " --" + " connected.");
             } catch (IOException e) {
                 e.printStackTrace();
             }

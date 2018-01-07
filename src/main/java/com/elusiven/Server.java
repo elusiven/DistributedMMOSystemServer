@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.UUID;
 
 public class Server {
 
@@ -16,7 +17,7 @@ public class Server {
     private InputStream inputStream;
     private OutputStream outputStream;
 
-    private String id;
+    private int id;
     private Vec3 area;
     private int port;
 
@@ -27,6 +28,9 @@ public class Server {
         outputStream = otherServer.getOutputStream();
         this.area = area;
         this.id = id;
+
+        ReadThread rt = new ReadThread();
+        rt.start();
     }
 
     public Server(Socket otherServer) throws IOException {
@@ -35,9 +39,12 @@ public class Server {
         outputStream = otherServer.getOutputStream();
         this.area = area;
         this.id = id;
+
+        ReadThread rt = new ReadThread();
+        rt.start();
     }
 
-    public String getId(){
+    public int getId(){
         return this.id;
     }
 
@@ -50,11 +57,11 @@ public class Server {
         return this.area;
     }
 
-    public void sendTransferPlayerEvent(String id, float x, float y, float z){
+    public void sendTransferPlayerEvent(String id, float x, float y, float z) throws IOException {
 
         FlatBufferBuilder fbb = new FlatBufferBuilder(1024);
 
-        int playerInfoOffset = FlatCreator.create_PlayerInfo(fbb, id, x, y, z, 0, 0, 0, 0);
+        int playerInfoOffset = FlatCreator.create_PlayerInfo(fbb, id, Main.ServerID,x, y, z, 0, 0, 0, 0);
 
         TransferPlayerCommand.startTransferPlayerCommand(fbb);
         TransferPlayerCommand.addPlayer(fbb, playerInfoOffset);
@@ -67,7 +74,8 @@ public class Server {
         MessageRoot.finishMessageRootBuffer(fbb, msgRootOffset);
 
         byte[] buffer = fbb.sizedByteArray();
-        sendToServer(buffer);
+        outputStream.write(buffer, 0, buffer.length);
+        outputStream.flush();
     }
 
     // Send data to other server
@@ -78,6 +86,7 @@ public class Server {
             outputStream.write(len, 0, 4);
             // Send the message
             outputStream.write(data, 0, data.length);
+            outputStream.flush();
 
         } catch (IOException e){
             e.printStackTrace();
@@ -111,13 +120,11 @@ public class Server {
                 outputStream.close();
                 otherServer.close();
                 System.out.println("ServerStarter ID: " + id + "   -> Disconnected");
-                listener.removeClient(Server.this);
+                listener.removeServerSocket(Server.this);
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
         }
     }
-
-
 }

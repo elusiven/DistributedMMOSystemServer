@@ -16,8 +16,12 @@ public class NearbyServers implements ReceiveServerListener {
         nearbyServers.remove(server);
     }
 
-    public Server findById(String id){
+    public Server findById(int id){
         return nearbyServers.stream().filter(s -> s.getId() == id).findFirst().get();
+    }
+
+    public Server findFirst(){
+        return nearbyServers.stream().findFirst().get();
     }
 
     public Server findByArea(Vec3 area){
@@ -27,10 +31,17 @@ public class NearbyServers implements ReceiveServerListener {
     @Override
     public void dataReceive(Server server, ByteBuffer data) {
 
+        MessageRoot msg = MessageRoot.getRootAsMessageRoot(data);
+
+        if(msg.dataType() == Data.TransferPlayerCommand) {
+            // Transfer player to another server
+            TransferPlayerCommand transferPlayerCommand = (TransferPlayerCommand) msg.data(new TransferPlayerCommand());
+            System.out.println("Msg From Server: " + transferPlayerCommand.player().serverId() + "Player has been transferred -> ID: " + transferPlayerCommand.player().id());
+        }
     }
 
     @Override
-    public void removeClient(Server server) {
+    public void removeServerSocket(Server server) {
 
     }
 }

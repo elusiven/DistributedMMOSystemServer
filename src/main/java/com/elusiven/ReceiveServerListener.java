@@ -4,5 +4,5 @@ import java.nio.ByteBuffer;
 
 public interface ReceiveServerListener {
     void dataReceive(Server server, ByteBuffer data);
-    void removeClient(Server server);
+    void removeServerSocket(Server server);
 }
